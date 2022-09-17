@@ -9,47 +9,43 @@ import (
 
 var jwtSecret []byte
 
-type Claims struct {
-	UserID   uint16 `json:"user_id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+type AuthClaims struct {
+	UserID int `json:"userid"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(user_id uint16, username string, password string) (string, error) {
+func GenerateToken(user_id uint16) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(24 * 30 * time.Hour)
 
-	fmt.Println("Generating Token...")
-	fmt.Println(user_id)
-	fmt.Println(username)
-	fmt.Println(password)
-
-	claims := Claims{
-		user_id,
-		username,
-		password,
+	authClaims := &AuthClaims{
+		int(user_id),
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expireTime),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "stratosphaere",
+			Issuer:    "solis",
 		},
 	}
 
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenClaims.SignedString(jwtSecret)
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, authClaims)
+	signedString, err := tokenClaims.SignedString(jwtSecret)
 
-	return token, err
+	fmt.Println("Generated Token: " + signedString)
+
+	testparse, err := ParseToken(signedString)
+	fmt.Println("TestParse: " + fmt.Sprint(err))
+	fmt.Println(testparse)
+
+	return signedString, err
 }
 
-func ParseToken(token string) (*Claims, error) {
-	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+func ParseToken(tokenString string) (*AuthClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
 	})
-
-	if tokenClaims != nil {
-		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
+	fmt.Println(token.Valid)
+	fmt.Println(token.Claims)
+	if token != nil {
+		if claims, ok := token.Claims.(*AuthClaims); ok && token.Valid {
 			return claims, nil
 		}
 	}

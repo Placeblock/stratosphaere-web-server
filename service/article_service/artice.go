@@ -1,6 +1,9 @@
 package article_serivce
 
-import "stratosphaere-server/models"
+import (
+	"fmt"
+	"stratosphaere-server/models"
+)
 
 type Article struct {
 	ID            uint16
@@ -25,7 +28,8 @@ func (a *Article) Add() (uint16, error) {
 		Author:        a.Author,
 		Published:     a.Published,
 	}
-	err := models.AddArticle(article)
+	err := models.AddArticle(&article)
+	fmt.Println(article)
 	if err != nil {
 		return 0, err
 	}

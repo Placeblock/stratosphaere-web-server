@@ -20,10 +20,10 @@ func JWT() gin.HandlerFunc {
 
 		code = exception.SUCCESS
 
-		const BEARER_SCHEMA = "Bearer"
+		const BEARER_SCHEMA = "Bearer "
 		authHeader := c.GetHeader("Authorization")
 		token := authHeader[len(BEARER_SCHEMA):]
-		fmt.Printf("token %s", token)
+		fmt.Println("token " + token)
 		if token == "" {
 			code = exception.ERROR_AUTH_TOKEN_MISSING
 		} else {

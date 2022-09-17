@@ -59,7 +59,7 @@ func EditArticle(article Article) error {
 	return nil
 }
 
-func AddArticle(article Article) error {
+func AddArticle(article *Article) error {
 	if err := db.Create(&article).Error; err != nil {
 		return err
 	}

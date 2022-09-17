@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"stratosphaere-server/pkg/util"
 
 	"gorm.io/gorm"
@@ -18,11 +17,8 @@ func (Auth) TableName() string {
 }
 
 func CheckAuth(username, password string) (bool, uint16, error) {
-	fmt.Println("CHECKING AUTH...")
 	var auth Auth
-	fmt.Println(auth)
 	err := db.Select("id, password").Where(Auth{Username: username}).First(&auth).Error
-	fmt.Println(auth)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return false, 0, err
 	}
