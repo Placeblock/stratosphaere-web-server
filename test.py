@@ -11,19 +11,9 @@ articlesresult = requests.post("https://stratosphaere.codelix.de/api/v1/blog/art
 
 print(articlesresult)
 
-articleresult = requests.get("https://stratosphaere.codelix.de/api/v1/blog/articles/"+str(articlesresult["data"]["id"])).json()
 
-print(articleresult)
+articledata = requests.get("https://stratosphaere.codelix.de/api/v1/blog/articles/"+str(articlesresult["data"]["id"])).json()["data"]
 
-wrongarticleresult = requests.get("https://stratosphaere.codelix.de/api/v1/blog/articles/3123").json()
+print(articledata)
 
-print(wrongarticleresult)
-
-deletearticleresult = requests.delete("https://stratosphaere.codelix.de/api/v1/blog/articles/"+str(articlesresult["data"]["id"])).json()
-
-print(deletearticleresult)
-
-
-articleresult = requests.get("https://stratosphaere.codelix.de/api/v1/blog/articles/"+str(articlesresult["data"]["id"])).json()
-
-print(articleresult)
+articledata["description"] = "Das ist eine Beschreibung"
