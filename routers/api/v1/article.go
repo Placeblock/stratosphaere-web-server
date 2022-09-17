@@ -1,8 +1,8 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
+	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
 	article_serivce "stratosphaere-server/service/article_service"
@@ -35,39 +35,38 @@ func GetArticle(c *gin.Context) {
 }
 
 func GetArticles(c *gin.Context) {
-	fmt.Println("GET ARTICLES")
 	appG := app.Gin{C: c}
 
 	pageNum, err := strconv.ParseInt(c.Query("page"), 10, 32)
 	if err != nil {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
-		return
+		pageNum = 0
 	}
 	pageSize, err := strconv.ParseInt(c.Query("pageSize"), 10, 0)
 	if err != nil {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
-		return
-	}
-	articleService := article_serivce.Article{
-		PageNum:  int(pageNum),
-		PageSize: int(pageSize),
+		pageSize = 2147483647
 	}
 
-	total, err := articleService.Count()
+	articleService := article_serivce.Article{}
+
+	articles, err := articleService.GetAll(int(pageNum), int(pageSize))
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
 		return
 	}
 
-	articles, err := articleService.GetAll()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
-		return
+	_, exists := c.Get("user")
+	if !exists {
+		published := []*models.Article{}
+		for i := range articles {
+			if articles[i].Published {
+				published = append(published, articles[i])
+			}
+		}
+		articles = published
 	}
 
 	data := make(map[string]interface{})
-	data["lists"] = articles
-	data["total"] = total
+	data["articles"] = articles
 
 	appG.Response(http.StatusOK, exception.SUCCESS, data)
 }
@@ -77,7 +76,6 @@ type AddArticleForm struct {
 }
 
 func AddArticle(c *gin.Context) {
-	fmt.Println("ADD ARTICLE")
 	appG := app.Gin{C: c}
 
 	author := c.GetString("user")

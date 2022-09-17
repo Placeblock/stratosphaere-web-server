@@ -23,16 +23,12 @@ func main() {
 
 	routersInit := routers.InitRouter()
 	endPoint := fmt.Sprintf(":%d", setting.ServerSetting.HttpPort)
-	maxHeaderBytes := 1 << 20
 
 	server := &http.Server{
 		Addr:    endPoint,
 		Handler: routersInit,
 	}
 
-	log.Println(routersInit)
-	log.Println(maxHeaderBytes)
-	log.Println(endPoint)
 	log.Printf("Start http server on Port %s", endPoint)
 
 	server.ListenAndServe()

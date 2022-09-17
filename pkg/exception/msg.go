@@ -5,7 +5,6 @@ var Messages = map[int]string{
 	ERROR:                          "fail",
 	INVALID_PARAMS:                 "Invalid Parameters",
 	ERROR_AUTH_CHECK_TOKEN_FAIL:    "Invalid token",
-	ERROR_AUTH_CHECK_TOKEN_TIMEOUT: "Token expired",
 	ERROR_AUTH_INVALID_CREDENTIALS: "Invalid credentials",
 	ERROR_AUTH_TOKEN_FAIL:          "Error occured while trying to generate Token",
 	ERROR_ARTICLE_NOT_EXIST:        "Article doesn't exist",

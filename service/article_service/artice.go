@@ -1,7 +1,6 @@
 package article_serivce
 
 import (
-	"fmt"
 	"stratosphaere-server/models"
 )
 
@@ -13,9 +12,6 @@ type Article struct {
 	CoverImageUrl string
 	Published     bool
 	Author        string
-
-	PageNum  int
-	PageSize int
 }
 
 func (a *Article) Add() (uint16, error) {
@@ -29,7 +25,6 @@ func (a *Article) Add() (uint16, error) {
 		Published:     a.Published,
 	}
 	err := models.AddArticle(&article)
-	fmt.Println(article)
 	if err != nil {
 		return 0, err
 	}
@@ -56,8 +51,8 @@ func (a *Article) Get() (*models.Article, error) {
 	return article, nil
 }
 
-func (a *Article) GetAll() ([]*models.Article, error) {
-	articles, err := models.GetArticles(a.PageNum, a.PageSize, a)
+func (a *Article) GetAll(pageNum, pageSize int) ([]*models.Article, error) {
+	articles, err := models.GetArticles(pageNum, pageSize, a)
 	if err != nil {
 		return nil, err
 	}

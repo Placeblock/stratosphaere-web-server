@@ -20,6 +20,7 @@ func Setup() {
 		setting.DatabaseSetting.Name)
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
+		/*Logger:      logger.Default.LogMode(logger.Silent),*/
 	})
 
 	if err != nil {

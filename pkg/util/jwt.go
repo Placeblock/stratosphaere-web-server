@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -28,13 +27,6 @@ func GenerateToken(user_id uint16) (string, error) {
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, authClaims)
 	signedString, err := tokenClaims.SignedString(jwtSecret)
-
-	fmt.Println("Generated Token: " + signedString)
-
-	testparse, err := ParseToken(signedString)
-	fmt.Println("TestParse: " + fmt.Sprint(err))
-	fmt.Println(testparse)
-
 	return signedString, err
 }
 
@@ -42,8 +34,6 @@ func ParseToken(tokenString string) (*AuthClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
 	})
-	fmt.Println(token.Valid)
-	fmt.Println(token.Claims)
 	if token != nil {
 		if claims, ok := token.Claims.(*AuthClaims); ok && token.Valid {
 			return claims, nil

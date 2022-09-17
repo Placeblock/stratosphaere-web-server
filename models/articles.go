@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -20,8 +19,6 @@ type Article struct {
 func ExistArticleByID(id uint16) (bool, error) {
 	var article Article
 	err := db.Where("id = ?", id).First(&article).Error
-	fmt.Println(err)
-	fmt.Println(errors.Is(err, gorm.ErrRecordNotFound))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
