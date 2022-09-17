@@ -71,7 +71,7 @@ func GetArticles(c *gin.Context) {
 }
 
 type AddArticleForm struct {
-	Author string `required`
+	Author string
 }
 
 func AddArticle(c *gin.Context) {
@@ -99,12 +99,12 @@ func AddArticle(c *gin.Context) {
 }
 
 type EditArticleForm struct {
-	ID            uint16 `form:"id" valid:"required"`
-	Title         string `form:"title" valid:"required,max=200"`
-	Description   string `form:"description" valid:"required,max=1000"`
-	Content       string `form:"content" valid:"required,max=65535"`
-	CoverImageUrl string `form:"cover_image_url" valid:"required,max=255"`
-	Published     bool   `form:"published" valid:"required"`
+	ID            uint16 `form:"id" validate:"required"`
+	Title         string `form:"title" validate:"required,max=200"`
+	Description   string `form:"description" validate:"required,max=1000"`
+	Content       string `form:"content" validate:"required,max=65535"`
+	CoverImageUrl string `form:"cover_image_url" validate:"required,max=255"`
+	Published     bool   `form:"published" validate:"required"`
 }
 
 func EditArticle(c *gin.Context) {

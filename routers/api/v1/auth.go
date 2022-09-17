@@ -12,8 +12,8 @@ import (
 )
 
 type auth struct {
-	Username string `required,max=50`
-	Password string `required,max=50`
+	Username string `validate:"required,max=50"`
+	Password string `validate:"required,max=50"`
 }
 
 func GetAuth(c *gin.Context) {

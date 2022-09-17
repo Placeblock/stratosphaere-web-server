@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"stratosphaere-server/middleware"
 	v1 "stratosphaere-server/routers/api/v1"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,7 @@ func InitRouter() *gin.Engine {
 
 	//SECURE
 	apiv1_secure := apiv1.Group("/")
+	apiv1_secure.Use(middleware.JWT())
 
 	//SECURE-BLOG
 	apiv1_secure_blog := apiv1_secure.Group("/blog")
