@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"net/http"
@@ -8,7 +8,13 @@ import (
 	"stratosphaere-server/service/auth_service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
+
+type auth struct {
+	Username string `required,max=50`
+	Password string `required,max=50`
+}
 
 func GetAuth(c *gin.Context) {
 	appG := app.Gin{C: c}
@@ -16,14 +22,16 @@ func GetAuth(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
-	auth := auth_service.Auth{Username: username, Password: password}
+	auth := auth{Username: username, Password: password}
 
-	err := auth.Validate()
-	if err != nil {
+	validation := validator.New()
+	valid := validation.Struct(auth)
+	if valid != nil {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 	}
 
-	exists, err := auth.Check()
+	authService := auth_service.Auth{Username: username, Password: password}
+	exists, err := authService.Check()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_CHECK_TOKEN_FAIL, nil)
 	}
