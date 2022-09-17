@@ -1,16 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"stratosphaere-server/models"
+	"stratosphaere-server/pkg/setting"
+	"stratosphaere-server/pkg/util"
+	"stratosphaere-server/routers"
 )
 
-func main() {
-	fmt.Println("Hellp World")
-	http.HandleFunc("/", testHandler)
-	http.ListenAndServe(":9130", nil)
+func init() {
+	setting.Setup()
+	models.Setup()
+	util.Setup()
 }
 
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Schue, Hose, Hemd"))
+func main() {
+	routersInit := routers.InitRouter()
+	readTimeout := setting
 }
