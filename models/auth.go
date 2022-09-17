@@ -1,23 +1,31 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"fmt"
+	"stratosphaere-server/pkg/util"
+
+	"gorm.io/gorm"
+)
 
 type Auth struct {
-	ID       int    `gorm:"primary_key" json:"id"`
+	ID       int    `gorm:"primary_key,autoIncrement" json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-func CheckAuth(username, password string) (bool, error) {
+func (Auth) TableName() string {
+	return "users"
+}
+
+func CheckAuth(username, password string) (bool, uint16, error) {
+	fmt.Println("CHECKING AUTH...")
 	var auth Auth
-	err := db.Select("id").Where(Auth{Username: username, Password: password}).First(&auth).Error
+	fmt.Println(auth)
+	err := db.Select("id, password").Where(Auth{Username: username}).First(&auth).Error
+	fmt.Println(auth)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return false, err
+		return false, 0, err
 	}
 
-	if auth.ID > 0 {
-		return true, nil
-	}
-
-	return false, nil
+	return util.CompareHash(auth.Password, []byte(password)), uint16(auth.ID), nil
 }

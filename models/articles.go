@@ -1,6 +1,11 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"errors"
+	"fmt"
+
+	"gorm.io/gorm"
+)
 
 type Article struct {
 	ID            uint16 `json:"id"`
@@ -13,22 +18,23 @@ type Article struct {
 }
 
 func ExistArticleByID(id uint16) (bool, error) {
-	var exists bool
-	err := db.Select("count(*) > 0").Where("id = ?", id).First(&exists).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return false, err
+	var article Article
+	err := db.Where("id = ?", id).First(&article).Error
+	fmt.Println(err)
+	fmt.Println(errors.Is(err, gorm.ErrRecordNotFound))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		} else {
+			return false, err
+		}
 	}
-
-	if exists {
-		return true, nil
-	}
-
-	return false, nil
+	return true, nil
 }
 
-func GetArticles(page uint16, pageSize int, maps interface{}) ([]*Article, error) {
+func GetArticles(page int, pageSize int, maps interface{}) ([]*Article, error) {
 	var articles []*Article
-	err := db.Where(maps).Offset(page).Limit(pageSize).Find(&articles).Error
+	err := db.Where(maps).Offset(page * pageSize).Limit(pageSize).Find(&articles).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -68,8 +74,8 @@ func DeleteArticle(id uint16) error {
 	return nil
 }
 
-func GetArticleTotal(maps interface{}) (int, error) {
-	var count int
+func GetArticleTotal(maps interface{}) (int64, error) {
+	var count int64
 	if err := db.Model(&Article{}).Where(maps).Count(&count).Error; err != nil {
 		return 0, err
 	}

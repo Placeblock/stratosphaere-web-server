@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
@@ -34,6 +35,7 @@ func GetArticle(c *gin.Context) {
 }
 
 func GetArticles(c *gin.Context) {
+	fmt.Println("GET ARTICLES")
 	appG := app.Gin{C: c}
 
 	pageNum, err := strconv.ParseInt(c.Query("page"), 10, 32)
@@ -47,7 +49,7 @@ func GetArticles(c *gin.Context) {
 		return
 	}
 	articleService := article_serivce.Article{
-		PageNum:  uint16(pageNum),
+		PageNum:  int(pageNum),
 		PageSize: int(pageSize),
 	}
 
@@ -75,14 +77,10 @@ type AddArticleForm struct {
 }
 
 func AddArticle(c *gin.Context) {
+	fmt.Println("ADD ARTICLE")
 	appG := app.Gin{C: c}
 
-	author := c.PostForm("author")
-
-	if author == "" {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
-		return
-	}
+	author := c.GetString("user")
 
 	articleService := article_serivce.Article{
 		Author: author,

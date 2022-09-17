@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -9,20 +10,29 @@ import (
 var jwtSecret []byte
 
 type Claims struct {
+	UserID   uint16 `json:"user_id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
-func GenerateToken(username, password string) (string, error) {
+func GenerateToken(user_id uint16, username string, password string) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(24 * 30 * time.Hour)
 
+	fmt.Println("Generating Token...")
+	fmt.Println(user_id)
+	fmt.Println(username)
+	fmt.Println(password)
+
 	claims := Claims{
+		user_id,
 		username,
 		password,
-		jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expireTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "stratosphaere",
 		},
 	}

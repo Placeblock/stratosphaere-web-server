@@ -2,7 +2,6 @@ package setting
 
 import (
 	"log"
-	"time"
 
 	"github.com/go-ini/ini"
 )
@@ -25,10 +24,8 @@ type Database struct {
 var DatabaseSetting = &Database{}
 
 type Server struct {
-	RunMode      string
-	HttpPort     int
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
+	RunMode  string
+	HttpPort int
 }
 
 var ServerSetting = &Server{}

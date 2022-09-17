@@ -11,7 +11,7 @@ type Article struct {
 	Published     bool
 	Author        string
 
-	PageNum  uint16
+	PageNum  int
 	PageSize int
 }
 
@@ -72,6 +72,6 @@ func (a *Article) getMaps() map[string]interface{} {
 	return make(map[string]interface{})
 }
 
-func (a *Article) Count() (int, error) {
+func (a *Article) Count() (int64, error) {
 	return models.GetArticleTotal(a.getMaps())
 }

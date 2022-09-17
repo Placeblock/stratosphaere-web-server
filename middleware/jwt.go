@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
 	"stratosphaere-server/pkg/util"
 
@@ -11,15 +13,22 @@ import (
 
 func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		appG := app.Gin{C: c}
+
+		fmt.Println("JWT MIDDLEWARE")
 		var code int
-		var data interface{}
 
 		code = exception.SUCCESS
-		token := c.Query("token")
+
+		const BEARER_SCHEMA = "Bearer"
+		authHeader := c.GetHeader("Authorization")
+		token := authHeader[len(BEARER_SCHEMA):]
+		fmt.Printf("token %s", token)
 		if token == "" {
-			code = exception.INVALID_PARAMS
+			code = exception.ERROR_AUTH_TOKEN_MISSING
 		} else {
-			_, err := util.ParseToken(token)
+			claims, err := util.ParseToken(token)
+			fmt.Println(claims)
 			if err != nil {
 				switch err.(*jwt.ValidationError).Errors {
 				case jwt.ValidationErrorExpired:
@@ -27,15 +36,13 @@ func JWT() gin.HandlerFunc {
 				default:
 					code = exception.ERROR_AUTH_CHECK_TOKEN_FAIL
 				}
+			} else {
+				c.Set("user", claims.UserID)
 			}
 		}
 
 		if code != exception.SUCCESS {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"code": code,
-				"msg":  exception.GetMsg(code),
-				"data": data,
-			})
+			appG.Response(http.StatusUnauthorized, code, nil)
 
 			c.Abort()
 			return

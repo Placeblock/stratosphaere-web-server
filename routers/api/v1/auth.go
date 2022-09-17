@@ -32,7 +32,7 @@ func GetAuth(c *gin.Context) {
 	}
 
 	authService := auth_service.Auth{Username: username, Password: password}
-	exists, err := authService.Check()
+	exists, id, err := authService.Check()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_CHECK_TOKEN_FAIL, nil)
 		return
@@ -42,7 +42,7 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	token, err := util.GenerateToken(username, password)
+	token, err := util.GenerateToken(id, username, password)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_TOKEN_FAIL, nil)
 		return

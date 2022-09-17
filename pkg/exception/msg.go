@@ -20,6 +20,7 @@ var Messages = map[int]string{
 	ERROR_ARTICLE_FAIL_COUNT:       "Error occured while trying to count articles",
 	ERROR_EMAIL_ALREADY_EXIST:      "This email already exists",
 	ERROR_EMAIL_NOT_EXIST:          "This email doesn't exist",
+	ERROR_AUTH_TOKEN_MISSING:       "No token provided in Authorization Header",
 }
 
 func GetMsg(code int) string {
