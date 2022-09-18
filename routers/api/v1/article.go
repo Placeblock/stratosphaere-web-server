@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -9,7 +10,18 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 )
+
+type ExtArticle struct {
+	ID            uint16 `json:"id"`
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	Content       string `json:"content"`
+	CoverImageUrl string `json:"cover_image_url"`
+	AuthorName    string `json:"author_name"`
+	Published     bool   `json:"published"`
+}
 
 func GetArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
@@ -31,7 +43,15 @@ func GetArticle(c *gin.Context) {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_GET, nil)
 		return
 	}
-	appG.Response(http.StatusOK, exception.SUCCESS, article)
+	authorName, _ := models.GetName(article.Author)
+	appG.Response(http.StatusOK, exception.SUCCESS, ExtArticle{
+		ID:            article.ID,
+		Title:         article.Title,
+		Description:   article.Description,
+		Content:       article.Content,
+		CoverImageUrl: article.CoverImageUrl,
+		AuthorName:    authorName,
+	})
 }
 
 func GetArticles(c *gin.Context) {
@@ -65,23 +85,32 @@ func GetArticles(c *gin.Context) {
 		articles = published
 	}
 
+	extArticles := []*ExtArticle{}
+	for i := range articles {
+		article := articles[i]
+		authorName, _ := models.GetName(article.Author)
+		extArticles = append(extArticles, &ExtArticle{
+			ID:            article.ID,
+			Title:         article.Title,
+			Description:   article.Description,
+			Content:       article.Content,
+			CoverImageUrl: article.CoverImageUrl,
+			AuthorName:    authorName,
+		})
+	}
+
 	data := make(map[string]interface{})
 	data["articles"] = articles
 
 	appG.Response(http.StatusOK, exception.SUCCESS, data)
 }
 
-type AddArticleForm struct {
-	Author string
-}
-
 func AddArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	author := c.GetString("user")
-
+	author := c.GetInt("user")
 	articleService := article_serivce.Article{
-		Author: author,
+		Author: uint16(author),
 	}
 	id, err := articleService.Add()
 	if err != nil {
@@ -105,15 +134,23 @@ type EditArticleForm struct {
 
 func EditArticle(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
+	fmt.Println(id)
 
 	var (
 		appG = app.Gin{C: c}
 		form = EditArticleForm{ID: uint16(id)}
 	)
 
-	httpCode, errCode := app.BindAndValid(c, &form)
-	if errCode != exception.SUCCESS {
-		appG.Response(httpCode, errCode, nil)
+	c.Request.ParseForm()
+	fmt.Printf("c.Request.Form: %v\n", c.Request.Form)
+	if c.BindJSON(&form) != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+
+	valid := validator.Validate{}
+	if valid.Struct(form) != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
 

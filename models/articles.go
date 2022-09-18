@@ -12,9 +12,11 @@ type Article struct {
 	Description   string `json:"description"`
 	Content       string `json:"content"`
 	CoverImageUrl string `json:"cover_image_url"`
-	Author        string `json:"author"`
+	Author        uint16 `json:"author"`
 	Published     bool   `json:"published"`
 }
+
+var article_cache map[string]Article = make(map[string]Article)
 
 func ExistArticleByID(id uint16) (bool, error) {
 	var article Article
@@ -31,7 +33,7 @@ func ExistArticleByID(id uint16) (bool, error) {
 
 func GetArticles(page int, pageSize int, maps interface{}) ([]*Article, error) {
 	var articles []*Article
-	err := db.Where(maps).Offset(page * pageSize).Limit(pageSize).Find(&articles).Error
+	err := db.Where(maps).Offset(page * pageSize).Limit(pageSize).Joins("JOIN users ON users.id = articles.author").Find(&articles).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -40,7 +42,7 @@ func GetArticles(page int, pageSize int, maps interface{}) ([]*Article, error) {
 
 func GetArticle(id uint16) (*Article, error) {
 	var article Article
-	err := db.Where("id = ?", id).First(&article).Error
+	err := db.Where("articles.id = ?", id).Joins("JOIN users ON users.id = articles.author").First(&article).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

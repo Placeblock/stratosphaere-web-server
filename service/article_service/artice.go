@@ -11,7 +11,8 @@ type Article struct {
 	Content       string
 	CoverImageUrl string
 	Published     bool
-	Author        string
+	Author        uint16
+	AuthorName    string
 }
 
 func (a *Article) Add() (uint16, error) {
