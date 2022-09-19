@@ -9,16 +9,18 @@ import (
 var jwtSecret []byte
 
 type AuthClaims struct {
-	UserID int `json:"userid"`
+	UserID   int    `json:"userid"`
+	Username string `json:"user_name"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(user_id uint16) (string, error) {
+func GenerateToken(user_id uint16, username string) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(24 * 30 * time.Hour)
 
 	authClaims := &AuthClaims{
 		int(user_id),
+		username,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expireTime),
 			Issuer:    "solis",

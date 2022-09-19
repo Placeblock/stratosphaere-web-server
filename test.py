@@ -19,7 +19,7 @@ print(articledata)
 articledata["description"] = "Das ist eine Beschreibung"
 
 
-articlesresult = requests.put("https://stratosphaere.codelix.de/api/v1/blog/articles/"+str(articlesresult["data"]["id"]), headers={"Authorization":"Bearer " + authresult["data"]["token"]}, data={
+""" articlesresult = requests.put("https://stratosphaere.codelix.de/api/v1/blog/articles/"+str(articlesresult["data"]["id"]), headers={"Authorization":"Bearer " + authresult["data"]["token"]}, data={
     "id": articledata["id"],
     "title": articledata["title"],
     "description": articledata["description"],
@@ -28,4 +28,4 @@ articlesresult = requests.put("https://stratosphaere.codelix.de/api/v1/blog/arti
     "published": articledata["published"]
 }).json()
 
-print(articlesresult)
+print(articlesresult) """

@@ -12,31 +12,16 @@ type Auth struct {
 	Password string `json:"password"`
 }
 
-var user_cache map[uint16]Auth = make(map[uint16]Auth)
-
 func (Auth) TableName() string {
 	return "users"
 }
 
-func CheckAuth(username, password string) (bool, uint16, error) {
+func (a Auth) Check() (bool, error) {
 	var auth Auth
-	err := db.Select("id, password").Where(Auth{Username: username}).First(&auth).Error
+	err := db.Select("id, password").Where(Auth{Username: a.Username}).First(&auth).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return false, 0, err
+		return false, err
 	}
-
-	return util.CompareHash(auth.Password, []byte(password)), uint16(auth.ID), nil
-}
-
-func GetName(userid uint16) (string, error) {
-	if user, ok := user_cache[userid]; ok {
-		return user.Username, nil
-	}
-	var user Auth
-	err := db.Where(Auth{ID: userid}).First(&user).Error
-	if err != nil {
-		return "", err
-	}
-	user_cache[userid] = user
-	return user.Username, nil
+	a.ID = uint16(auth.ID)
+	return util.CompareHash(auth.Password, []byte(a.Password)), nil
 }

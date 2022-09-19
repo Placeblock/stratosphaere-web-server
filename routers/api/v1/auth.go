@@ -2,10 +2,10 @@ package v1
 
 import (
 	"net/http"
+	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
 	"stratosphaere-server/pkg/util"
-	"stratosphaere-server/service/auth_service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -31,8 +31,8 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	authService := auth_service.Auth{Username: username, Password: password}
-	exists, id, err := authService.Check()
+	authModel := models.Auth{Username: username, Password: password}
+	exists, err := authModel.Check()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_CHECK_TOKEN_FAIL, nil)
 		return
@@ -42,7 +42,7 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	token, err := util.GenerateToken(id)
+	token, err := util.GenerateToken(authModel.ID, authModel.Username)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_TOKEN_FAIL, nil)
 		return

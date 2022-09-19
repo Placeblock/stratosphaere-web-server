@@ -6,28 +6,17 @@ import (
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
-	article_serivce "stratosphaere-server/service/article_service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 )
 
-type ExtArticle struct {
-	ID            uint16 `json:"id"`
-	Title         string `json:"title"`
-	Description   string `json:"description"`
-	Content       string `json:"content"`
-	CoverImageUrl string `json:"cover_image_url"`
-	AuthorName    string `json:"author_name"`
-	Published     bool   `json:"published"`
-}
-
 func GetArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
 
-	articleSerivce := article_serivce.Article{ID: uint16(id)}
+	articleSerivce := models.Article{ID: uint16(id)}
 	exists, err := articleSerivce.Exists()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)
@@ -43,15 +32,7 @@ func GetArticle(c *gin.Context) {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_GET, nil)
 		return
 	}
-	authorName, _ := models.GetName(article.Author)
-	appG.Response(http.StatusOK, exception.SUCCESS, ExtArticle{
-		ID:            article.ID,
-		Title:         article.Title,
-		Description:   article.Description,
-		Content:       article.Content,
-		CoverImageUrl: article.CoverImageUrl,
-		AuthorName:    authorName,
-	})
+	appG.Response(http.StatusOK, exception.SUCCESS, article)
 }
 
 func GetArticles(c *gin.Context) {
@@ -66,7 +47,7 @@ func GetArticles(c *gin.Context) {
 		pageSize = 2147483647
 	}
 
-	articleService := article_serivce.Article{}
+	articleService := models.Article{}
 
 	articles, err := articleService.GetAll(int(pageNum), int(pageSize))
 	if err != nil {
@@ -85,20 +66,6 @@ func GetArticles(c *gin.Context) {
 		articles = published
 	}
 
-	extArticles := []*ExtArticle{}
-	for i := range articles {
-		article := articles[i]
-		authorName, _ := models.GetName(article.Author)
-		extArticles = append(extArticles, &ExtArticle{
-			ID:            article.ID,
-			Title:         article.Title,
-			Description:   article.Description,
-			Content:       article.Content,
-			CoverImageUrl: article.CoverImageUrl,
-			AuthorName:    authorName,
-		})
-	}
-
 	data := make(map[string]interface{})
 	data["articles"] = articles
 
@@ -108,18 +75,18 @@ func GetArticles(c *gin.Context) {
 func AddArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	author := c.GetInt("user")
-	articleService := article_serivce.Article{
-		Author: uint16(author),
+	author := c.GetString("user")
+	articleService := models.Article{
+		Author: author,
 	}
-	id, err := articleService.Add()
+	err := articleService.Add()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
 		return
 	}
 
 	appG.Response(http.StatusOK, exception.SUCCESS, map[string]uint16{
-		"id": id,
+		"id": articleService.ID,
 	})
 }
 
@@ -154,7 +121,7 @@ func EditArticle(c *gin.Context) {
 		return
 	}
 
-	articleService := article_serivce.Article{
+	articleService := models.Article{
 		ID:            form.ID,
 		Title:         form.Title,
 		Description:   form.Description,
@@ -186,7 +153,7 @@ func DeleteArticle(c *gin.Context) {
 
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
 
-	articleService := article_serivce.Article{ID: uint16(id)}
+	articleService := models.Article{ID: uint16(id)}
 	exists, err := articleService.Exists()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)

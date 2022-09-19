@@ -16,7 +16,7 @@ func JWT() gin.HandlerFunc {
 			if token != "" {
 				claims, err := util.ParseToken(token)
 				if err == nil {
-					c.Set("user", claims.UserID)
+					c.Set("user", claims.Username)
 				}
 			}
 		}
