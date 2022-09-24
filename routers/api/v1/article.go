@@ -6,10 +6,10 @@ import (
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
+	"stratosphaere-server/pkg/util"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator"
 )
 
 func GetArticle(c *gin.Context) {
@@ -38,18 +38,18 @@ func GetArticle(c *gin.Context) {
 func GetArticles(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	pageNum, err := strconv.ParseInt(c.Query("page"), 10, 32)
+	offset, err := strconv.ParseInt(c.Query("offset"), 10, 32)
 	if err != nil {
-		pageNum = 0
+		offset = 0
 	}
-	pageSize, err := strconv.ParseInt(c.Query("pageSize"), 10, 0)
+	amount, err := strconv.ParseInt(c.Query("amount"), 10, 0)
 	if err != nil {
-		pageSize = 2147483647
+		amount = 2147483647
 	}
 
 	articleService := models.Article{}
 
-	articles, err := articleService.GetAll(int(pageNum), int(pageSize))
+	articles, err := articleService.GetAll(int(offset), int(amount))
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
 		return
@@ -91,38 +91,32 @@ func AddArticle(c *gin.Context) {
 }
 
 type EditArticleForm struct {
-	ID            uint16 `form:"id" validate:"required"`
-	Title         string `form:"title" validate:"required,max=200"`
-	Description   string `form:"description" validate:"required,max=1000"`
-	Content       string `form:"content" validate:"required,max=65535"`
-	CoverImageUrl string `form:"cover_image_url" validate:"required,max=255"`
-	Published     bool   `form:"published" validate:"required"`
+	ID            int    `json:"id" binding:"required" validate:"required"`
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	Content       string `json:"content"`
+	CoverImageUrl string `json:"cover_image_url"`
+	Published     bool   `json:"published"`
 }
 
 func EditArticle(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
-	fmt.Println(id)
+	appG := app.Gin{C: c}
+	form := EditArticleForm{}
 
-	var (
-		appG = app.Gin{C: c}
-		form = EditArticleForm{ID: uint16(id)}
-	)
-
-	c.Request.ParseForm()
-	fmt.Printf("c.Request.Form: %v\n", c.Request.Form)
 	if c.BindJSON(&form) != nil {
+		fmt.Println("BIND JSON ERROR")
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-
-	valid := validator.Validate{}
-	if valid.Struct(form) != nil {
+	err := util.Validate.Struct(&form)
+	if err != nil {
+		fmt.Println("VALIDATE STRUCT ERROR")
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
 
 	articleService := models.Article{
-		ID:            form.ID,
+		ID:            uint16(form.ID),
 		Title:         form.Title,
 		Description:   form.Description,
 		Content:       form.Content,

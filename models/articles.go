@@ -31,9 +31,9 @@ func (a Article) Exists() (bool, error) {
 	return true, nil
 }
 
-func (a Article) GetAll(page int, pageSize int) ([]*Article, error) {
+func (a Article) GetAll(offset int, amount int) ([]*Article, error) {
 	var articles []*Article
-	err := db.Where(a).Offset(page * pageSize).Limit(pageSize).Joins("JOIN users ON users.username = articles.author").Find(&articles).Error
+	err := db.Where(a).Offset(offset).Limit(amount).Joins("JOIN users ON users.username = articles.author").Find(&articles).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

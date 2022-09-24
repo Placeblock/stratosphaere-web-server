@@ -12,6 +12,7 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(middleware.CORS())
 
 	r.GET("/", func(ctx *gin.Context) {
 		fmt.Print("Test Request")
