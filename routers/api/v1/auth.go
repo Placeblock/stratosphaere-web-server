@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -12,17 +13,20 @@ import (
 )
 
 type auth struct {
-	Username string `validate:"required,max=50"`
-	Password string `validate:"required,max=50"`
+	Username string `json:"username" binding:"required" validate:"required,max=50"`
+	Password string `json:"password" binding:"required" validate:"required,max=50"`
 }
 
 func GetAuth(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	username := c.PostForm("username")
-	password := c.PostForm("password")
-
-	auth := auth{Username: username, Password: password}
+	auth := auth{}
+	if c.BindJSON(&auth) != nil {
+		fmt.Println("BIND JSON ERROR")
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	fmt.Println(auth)
 
 	validation := validator.New()
 	valid := validation.Struct(auth)
@@ -31,7 +35,7 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	authModel := models.Auth{Username: username, Password: password}
+	authModel := models.Auth{Username: auth.Username, Password: auth.Password}
 	exists, err := authModel.Check()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_CHECK_TOKEN_FAIL, nil)
@@ -48,7 +52,5 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	appG.Response(http.StatusOK, exception.SUCCESS, map[string]string{
-		"token": token,
-	})
+	appG.Response(http.StatusOK, exception.SUCCESS, token)
 }

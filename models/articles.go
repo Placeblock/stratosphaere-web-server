@@ -8,12 +8,12 @@ import (
 
 type Article struct {
 	ID            uint16 `json:"id"`
-	Title         string `json:"title"`
-	Description   string `json:"description"`
+	Title         string `json:"title" gorm:"default:'Unbekannter Titel'"`
+	Description   string `json:"description" gorm:"default:'Unbekannte Beschreibung'"`
 	Content       string `json:"content"`
-	CoverImageUrl string `json:"cover_image_url"`
+	CoverImageUrl string `json:"cover_image_url" gorm:"default:'https://cdn.pixabay.com/photo/2017/06/17/10/55/hot-air-balloon-2411851_960_720.jpg'"`
 	Author        string `json:"author"`
-	Published     bool   `json:"published"`
+	Published     bool   `json:"published" gorm:"default:0"`
 }
 
 var article_cache map[string]Article = make(map[string]Article)

@@ -66,10 +66,7 @@ func GetArticles(c *gin.Context) {
 		articles = published
 	}
 
-	data := make(map[string]interface{})
-	data["articles"] = articles
-
-	appG.Response(http.StatusOK, exception.SUCCESS, data)
+	appG.Response(http.StatusOK, exception.SUCCESS, articles)
 }
 
 func AddArticle(c *gin.Context) {
@@ -85,9 +82,9 @@ func AddArticle(c *gin.Context) {
 		return
 	}
 
-	appG.Response(http.StatusOK, exception.SUCCESS, map[string]uint16{
-		"id": articleService.ID,
-	})
+	article, err := articleService.Get()
+
+	appG.Response(http.StatusOK, exception.SUCCESS, article)
 }
 
 type EditArticleForm struct {
