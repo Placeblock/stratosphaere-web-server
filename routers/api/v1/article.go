@@ -6,8 +6,8 @@ import (
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
-	"stratosphaere-server/pkg/util"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +23,7 @@ func GetArticle(c *gin.Context) {
 		return
 	}
 	if !exists {
-		appG.Response(http.StatusOK, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
 		return
 	}
 
@@ -69,6 +69,48 @@ func GetArticles(c *gin.Context) {
 	appG.Response(http.StatusOK, exception.SUCCESS, articles)
 }
 
+type ArticleVisibilityForm struct {
+	Publish *bool `json:"publish" binding:"required"`
+}
+
+func ArticleVisibility(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
+	visibilityForm := ArticleVisibilityForm{}
+
+	err := c.BindJSON(&visibilityForm)
+	if err != nil {
+		fmt.Println(err)
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+
+	articleService := models.Article{
+		ID:          uint16(id),
+		Published:   *visibilityForm.Publish,
+		PublishDate: int(time.Now().Unix()),
+	}
+
+	exists, err := articleService.Exists()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)
+		return
+	}
+	if !exists {
+		appG.Response(http.StatusOK, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		return
+	}
+
+	err = articleService.Edit()
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_EDIT, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, exception.SUCCESS, articleService.PublishDate)
+}
+
 func AddArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
 
@@ -88,12 +130,11 @@ func AddArticle(c *gin.Context) {
 }
 
 type EditArticleForm struct {
-	ID            int    `json:"id" binding:"required" validate:"required"`
+	ID            int    `json:"id" binding:"required"`
 	Title         string `json:"title"`
 	Description   string `json:"description"`
 	Content       string `json:"content"`
 	CoverImageUrl string `json:"cover_image_url"`
-	Published     bool   `json:"published"`
 }
 
 func EditArticle(c *gin.Context) {
@@ -101,13 +142,6 @@ func EditArticle(c *gin.Context) {
 	form := EditArticleForm{}
 
 	if c.BindJSON(&form) != nil {
-		fmt.Println("BIND JSON ERROR")
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
-		return
-	}
-	err := util.Validate.Struct(&form)
-	if err != nil {
-		fmt.Println("VALIDATE STRUCT ERROR")
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
@@ -118,8 +152,8 @@ func EditArticle(c *gin.Context) {
 		Description:   form.Description,
 		Content:       form.Content,
 		CoverImageUrl: form.CoverImageUrl,
-		Published:     form.Published,
 	}
+
 	exists, err := articleService.Exists()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)

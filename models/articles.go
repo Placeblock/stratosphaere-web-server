@@ -14,6 +14,7 @@ type Article struct {
 	CoverImageUrl string `json:"cover_image_url" gorm:"default:'https://cdn.pixabay.com/photo/2017/06/17/10/55/hot-air-balloon-2411851_960_720.jpg'"`
 	Author        string `json:"author"`
 	Published     bool   `json:"published" gorm:"default:0"`
+	PublishDate   int    `json:"publish_date"`
 }
 
 var article_cache map[string]Article = make(map[string]Article)
