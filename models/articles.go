@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -57,6 +58,18 @@ func (a Article) Edit() error {
 	}
 
 	return nil
+}
+
+func (a Article) Visibility(visible bool) (int, error) {
+	var updateInterface = map[string]interface{}{"published": visible}
+	var updateTime = int(time.Now().Unix())
+	if visible {
+		updateInterface["publish_date"] = updateTime
+	}
+	if err := db.Model(&Article{}).Where("id = ?", a.ID).Updates(updateInterface).Error; err != nil {
+		return 0, err
+	}
+	return updateTime, nil
 }
 
 func (a *Article) Add() error {
