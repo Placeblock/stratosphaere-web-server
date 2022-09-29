@@ -7,7 +7,6 @@ import (
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,6 +49,7 @@ func GetArticles(c *gin.Context) {
 	articleService := models.Article{}
 
 	articles, err := articleService.GetAll(int(offset), int(amount))
+	fmt.Println(articles)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
 		return
@@ -81,15 +81,12 @@ func ArticleVisibility(c *gin.Context) {
 
 	err := c.BindJSON(&visibilityForm)
 	if err != nil {
-		fmt.Println(err)
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
 
 	articleService := models.Article{
-		ID:          uint16(id),
-		Published:   *visibilityForm.Publish,
-		PublishDate: int(time.Now().Unix()),
+		ID: uint16(id),
 	}
 
 	exists, err := articleService.Exists()
@@ -98,17 +95,17 @@ func ArticleVisibility(c *gin.Context) {
 		return
 	}
 	if !exists {
-		appG.Response(http.StatusOK, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
 		return
 	}
 
-	err = articleService.Edit()
+	publishDate, err := articleService.Visibility(*visibilityForm.Publish)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_EDIT, nil)
 		return
 	}
 
-	appG.Response(http.StatusOK, exception.SUCCESS, articleService.PublishDate)
+	appG.Response(http.StatusOK, exception.SUCCESS, publishDate)
 }
 
 func AddArticle(c *gin.Context) {

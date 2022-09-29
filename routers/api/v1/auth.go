@@ -42,7 +42,7 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 	if !exists {
-		appG.Response(http.StatusUnauthorized, exception.ERROR_AUTH_INVALID_CREDENTIALS, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_AUTH_INVALID_CREDENTIALS, nil)
 		return
 	}
 
