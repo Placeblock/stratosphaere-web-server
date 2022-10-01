@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -43,13 +42,12 @@ func GetArticles(c *gin.Context) {
 	}
 	amount, err := strconv.ParseInt(c.Query("amount"), 10, 0)
 	if err != nil {
-		amount = 2147483647
+		amount = 1000
 	}
 
 	articleService := models.Article{}
 
 	articles, err := articleService.GetAll(int(offset), int(amount))
-	fmt.Println(articles)
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
 		return
@@ -57,7 +55,7 @@ func GetArticles(c *gin.Context) {
 
 	_, exists := c.Get("user")
 	if !exists {
-		published := []*models.Article{}
+		published := []models.Article{}
 		for i := range articles {
 			if articles[i].Published {
 				published = append(published, articles[i])
