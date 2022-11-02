@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"fmt"
 	"net/http"
 	"stratosphaere-server/middleware"
 	v1 "stratosphaere-server/routers/api/v1"
@@ -12,11 +11,10 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
-	r.Use(gin.Logger())
+	//r.Use(gin.Logger())
 	r.Use(middleware.CORS())
 
 	r.GET("/", func(ctx *gin.Context) {
-		fmt.Print("Test Request")
 		ctx.JSON(http.StatusOK, "Working!")
 	})
 

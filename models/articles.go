@@ -33,9 +33,13 @@ func (a Article) Exists() (bool, error) {
 	return true, nil
 }
 
-func (a Article) GetAll(offset int, amount int) ([]*Article, error) {
+func (a Article) GetAll(offset int, amount int, onlyPublished bool) ([]*Article, error) {
 	var articles []*Article
-	err := db.Where(a).Offset(offset).Limit(amount).Joins("JOIN users ON users.username = articles.author").Find(&articles).Error
+	var model = db.Model(&Article{})
+	if onlyPublished {
+		model = model.Where("published = true")
+	}
+	err := model.Order("articles.published asc").Order("articles.publish_date desc").Offset(offset).Limit(amount).Joins("JOIN users ON users.username = articles.author").Find(&articles).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

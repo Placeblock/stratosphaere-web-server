@@ -34,36 +34,40 @@ func GetArticle(c *gin.Context) {
 	appG.Response(http.StatusOK, exception.SUCCESS, article)
 }
 
+type SortType string
+
+const (
+	SortDate     SortType = "publish_date"
+	SortDateDesc SortType = "-publish_date"
+)
+
+type GetArticlesParams struct {
+	Offset *uint16 `form:"offset" json:"offset"  binding:"required"`
+	Limit  *uint16 `form:"limit" json:"limit"  binding:"required"`
+}
+
 func GetArticles(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	offset, err := strconv.ParseInt(c.Query("offset"), 10, 32)
-	if err != nil {
-		offset = 0
+	var getArticlesParams GetArticlesParams
+
+	if err := c.BindQuery(&getArticlesParams); err != nil {
+		fmt.Println(err)
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
 	}
-	amount, err := strconv.ParseInt(c.Query("amount"), 10, 0)
-	if err != nil {
-		amount = 2147483647
-	}
+	fmt.Printf("Articles Request Offset: %d\n", *getArticlesParams.Offset)
+	fmt.Printf("Articles Request Limit: %d\n", *getArticlesParams.Limit)
 
 	articleService := models.Article{}
 
-	articles, err := articleService.GetAll(int(offset), int(amount))
-	fmt.Println(articles)
+	_, exists := c.Get("user")
+
+	articles, err := articleService.GetAll(int(*getArticlesParams.Offset), int(*getArticlesParams.Limit), !exists)
+
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
 		return
-	}
-
-	_, exists := c.Get("user")
-	if !exists {
-		published := []*models.Article{}
-		for i := range articles {
-			if articles[i].Published {
-				published = append(published, articles[i])
-			}
-		}
-		articles = published
 	}
 
 	appG.Response(http.StatusOK, exception.SUCCESS, articles)

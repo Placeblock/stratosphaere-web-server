@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -22,11 +21,9 @@ func GetAuth(c *gin.Context) {
 
 	auth := auth{}
 	if c.BindJSON(&auth) != nil {
-		fmt.Println("BIND JSON ERROR")
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	fmt.Println(auth)
 
 	validation := validator.New()
 	valid := validation.Struct(auth)
