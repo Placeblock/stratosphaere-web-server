@@ -7,15 +7,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type Article struct {
-	ID            uint16 `json:"id"`
+type ArticleMetadata struct {
 	Title         string `json:"title" gorm:"default:'Unbekannter Titel'"`
 	Description   string `json:"description" gorm:"default:'Unbekannte Beschreibung'"`
-	Content       string `json:"content"`
 	CoverImageUrl string `json:"cover_image_url" gorm:"default:'https://cdn.pixabay.com/photo/2017/06/17/10/55/hot-air-balloon-2411851_960_720.jpg'"`
 	Author        string `json:"author"`
 	Published     bool   `json:"published" gorm:"default:0"`
 	PublishDate   int    `json:"publish_date"`
+	UpdatedAt     int
+}
+
+type Article struct {
+	ID              uint16 `json:"id"`
+	ArticleMetadata `gorm:"embedded" json:"metadata"`
+	Content         string `json:"content"`
 }
 
 var article_cache map[string]Article = make(map[string]Article)
@@ -33,8 +38,13 @@ func (a Article) Exists() (bool, error) {
 	return true, nil
 }
 
-func (a Article) GetAll(offset int, amount int, onlyPublished bool) ([]*Article, error) {
-	var articles []*Article
+type GetAllResult struct {
+	ID       uint16          `json:"id"`
+	Metadata ArticleMetadata `gorm:"embedded" json:"metadata"`
+}
+
+func (a Article) GetAll(offset int, amount int, onlyPublished bool) ([]*GetAllResult, error) {
+	var articles []*GetAllResult
 	var model = db.Model(&Article{})
 	if onlyPublished {
 		model = model.Where("published = true")

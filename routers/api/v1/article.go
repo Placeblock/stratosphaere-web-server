@@ -34,16 +34,10 @@ func GetArticle(c *gin.Context) {
 	appG.Response(http.StatusOK, exception.SUCCESS, article)
 }
 
-type SortType string
-
-const (
-	SortDate     SortType = "publish_date"
-	SortDateDesc SortType = "-publish_date"
-)
-
 type GetArticlesParams struct {
-	Offset *uint16 `form:"offset" json:"offset"  binding:"required"`
-	Limit  *uint16 `form:"limit" json:"limit"  binding:"required"`
+	Offset    *uint16 `form:"offset" json:"offset"  binding:"required"`
+	Limit     *uint16 `form:"limit" json:"limit"  binding:"required"`
+	Published *bool   `form:"published" json:"published"`
 }
 
 func GetArticles(c *gin.Context) {
@@ -56,14 +50,12 @@ func GetArticles(c *gin.Context) {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	fmt.Printf("Articles Request Offset: %d\n", *getArticlesParams.Offset)
-	fmt.Printf("Articles Request Limit: %d\n", *getArticlesParams.Limit)
 
 	articleService := models.Article{}
 
-	_, exists := c.Get("user")
+	_, loggedIn := c.Get("user")
 
-	articles, err := articleService.GetAll(int(*getArticlesParams.Offset), int(*getArticlesParams.Limit), !exists)
+	articles, err := articleService.GetAll(int(*getArticlesParams.Offset), int(*getArticlesParams.Limit), !loggedIn || (getArticlesParams.Published != nil && *getArticlesParams.Published))
 
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
@@ -117,7 +109,7 @@ func AddArticle(c *gin.Context) {
 
 	author := c.GetString("user")
 	articleService := models.Article{
-		Author: author,
+		ArticleMetadata: models.ArticleMetadata{Author: author},
 	}
 	err := articleService.Add()
 	if err != nil {
@@ -148,11 +140,12 @@ func EditArticle(c *gin.Context) {
 	}
 
 	articleService := models.Article{
-		ID:            uint16(form.ID),
-		Title:         form.Title,
-		Description:   form.Description,
-		Content:       form.Content,
-		CoverImageUrl: form.CoverImageUrl,
+		ID: uint16(form.ID),
+		ArticleMetadata: models.ArticleMetadata{
+			Title:         form.Title,
+			Description:   form.Description,
+			CoverImageUrl: form.CoverImageUrl},
+		Content: form.Content,
 	}
 
 	exists, err := articleService.Exists()
