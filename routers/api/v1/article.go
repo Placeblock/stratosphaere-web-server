@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -55,7 +54,6 @@ func GetIDChunk(c *gin.Context) {
 	var getArticlesParams models.GetArticlesParams
 
 	if err := c.BindQuery(&getArticlesParams); err != nil {
-		fmt.Println(err)
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
@@ -71,7 +69,6 @@ func GetIDChunk(c *gin.Context) {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLES_FAIL_GET, nil)
 		return
 	}
-	fmt.Println(lastmodified.Format(http.TimeFormat))
 	if lastmodified.Format(http.TimeFormat) == c.GetHeader("If-Modified-Since") {
 		appG.Response(http.StatusNotModified, exception.SUCCESS, nil)
 		return
@@ -125,7 +122,7 @@ func AddArticle(c *gin.Context) {
 	articleService := models.Article{
 		Author: &author,
 	}
-	err := articleService.Add()
+	err := articleService.Create()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
 		return
