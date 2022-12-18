@@ -34,7 +34,7 @@ func InitRouter() *gin.Engine {
 	//UNSECURE-BLOG
 	apiv1_unsecure_blog := apiv1_unsecure.Group("/blog")
 
-	apiv1_unsecure_blog.GET("/articles", v1.GetArticles)
+	apiv1_unsecure_blog.GET("/articles", v1.GetIDChunk)
 	apiv1_unsecure_blog.GET("/articles/:id", v1.GetArticle)
 
 	//SECURE
