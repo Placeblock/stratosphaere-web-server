@@ -60,7 +60,7 @@ func GetIDChunk(c *gin.Context) {
 	}
 
 	articleService := models.Article{}
-  
+
 	_, loggedIn := c.Get("user")
 	if !loggedIn {
 		*getArticlesParams.Unpublished = false
@@ -194,13 +194,11 @@ func DeleteArticle(c *gin.Context) {
 
 func StoreImage(c *gin.Context) {
 	appG := app.Gin{C: c}
-	fmt.Println(c.ContentType())
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	fmt.Println(header.Size)
 	if header.Size >= 1000000 {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
