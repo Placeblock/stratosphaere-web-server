@@ -22,7 +22,7 @@ func Setup() {
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger:      logger.Default.LogMode(logger.Info),
 		PrepareStmt: true,
-		/*Logger:      logger.Default.LogMode(logger.Silent),*/
+		//Logger:      logger.Default.LogMode(logger.Info),
 	})
 
 	if err != nil {

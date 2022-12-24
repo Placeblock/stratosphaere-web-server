@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -61,7 +60,7 @@ func GetIDChunk(c *gin.Context) {
 	}
 
 	articleService := models.Article{}
-
+  
 	_, loggedIn := c.Get("user")
 	if !loggedIn {
 		*getArticlesParams.Unpublished = false
