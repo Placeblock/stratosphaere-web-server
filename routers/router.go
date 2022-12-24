@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"fmt"
 	"net/http"
 	"stratosphaere-server/middleware"
 	v1 "stratosphaere-server/routers/api/v1"
@@ -12,11 +11,10 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
-	r.Use(gin.Logger())
+	//r.Use(gin.Logger())
 	r.Use(middleware.CORS())
 
 	r.GET("/", func(ctx *gin.Context) {
-		fmt.Print("Test Request")
 		ctx.JSON(http.StatusOK, "Working!")
 	})
 
@@ -36,7 +34,7 @@ func InitRouter() *gin.Engine {
 	//UNSECURE-BLOG
 	apiv1_unsecure_blog := apiv1_unsecure.Group("/blog")
 
-	apiv1_unsecure_blog.GET("/articles", v1.GetArticles)
+	apiv1_unsecure_blog.GET("/articles", v1.GetIDChunk)
 	apiv1_unsecure_blog.GET("/articles/:id", v1.GetArticle)
 
 	//SECURE
@@ -49,6 +47,7 @@ func InitRouter() *gin.Engine {
 	apiv1_secure_blog.DELETE("/articles/:id", v1.DeleteArticle)
 	apiv1_secure_blog.PUT("/articles/:id", v1.EditArticle)
 	apiv1_secure_blog.PUT("/articles/:id/publish", v1.ArticleVisibility)
+	apiv1_secure_blog.POST("/image", v1.StoreImage)
 
 	//SECURE-LIVE
 	/*apiv1_secure.POST("/live")*/

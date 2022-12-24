@@ -6,65 +6,82 @@ import (
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
 
-	articleSerivce := models.Article{ID: uint16(id)}
-	exists, err := articleSerivce.Exists()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)
+	id, interr := strconv.ParseInt(c.Param("id"), 10, 32)
+
+	if interr != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	if !exists {
-		appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+	fields := c.QueryArray("fields")
+	if len(fields) > 0 {
+		fields = append(fields, "updated_at")
+	}
+	uid := uint16(id)
+
+	articleSerivce := models.Article{ID: &uid}
+	article, err := articleSerivce.Get(fields)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		} else {
+			appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_GET, nil)
+		}
 		return
 	}
 
-	article, err := articleSerivce.Get()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_GET, nil)
+	timestamp := article.UpdatedAt.UTC().Format(http.TimeFormat)
+	if timestamp == c.GetHeader("If-Modified-Since") {
+		appG.Response(http.StatusNotModified, exception.SUCCESS, nil)
 		return
 	}
-	appG.Response(http.StatusOK, exception.SUCCESS, article)
+	c.Header("Last-Modified", timestamp)
+	appG.C.Header("Cache-Control", "public, max-age=0")
+
+	appG.Response(http.StatusOK, exception.SUCCESS, *article)
 }
 
-func GetArticles(c *gin.Context) {
+func GetIDChunk(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	offset, err := strconv.ParseInt(c.Query("offset"), 10, 32)
-	if err != nil {
-		offset = 0
-	}
-	amount, err := strconv.ParseInt(c.Query("amount"), 10, 0)
-	if err != nil {
-		amount = 1000
+	var getArticlesParams models.GetArticlesParams
+
+	if err := c.BindQuery(&getArticlesParams); err != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
 	}
 
 	articleService := models.Article{}
-
-	articles, err := articleService.GetAll(int(offset), int(amount))
+  
+	_, loggedIn := c.Get("user")
+	if !loggedIn {
+		*getArticlesParams.Unpublished = false
+	}
+	lastmodified, err := models.GetAllLastModified()
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_COUNT, nil)
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLES_FAIL_GET, nil)
 		return
 	}
-
-	_, exists := c.Get("user")
-	if !exists {
-		published := []models.Article{}
-		for i := range articles {
-			if articles[i].Published {
-				published = append(published, articles[i])
-			}
-		}
-		articles = published
+	if lastmodified.Format(http.TimeFormat) == c.GetHeader("If-Modified-Since") {
+		appG.Response(http.StatusNotModified, exception.SUCCESS, nil)
+		return
 	}
-
-	appG.Response(http.StatusOK, exception.SUCCESS, articles)
+	idchunk, err := articleService.GetIDChunk(&getArticlesParams)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLES_FAIL_GET, nil)
+		return
+	}
+	appG.C.Header("Last-Modified", lastmodified.Format(http.TimeFormat))
+	appG.C.Header("Cache-Control", "max-age=0")
+	appG.Response(http.StatusOK, exception.SUCCESS, idchunk)
 }
 
 type ArticleVisibilityForm struct {
@@ -74,36 +91,29 @@ type ArticleVisibilityForm struct {
 func ArticleVisibility(c *gin.Context) {
 	appG := app.Gin{C: c}
 
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
+	id, iderr := strconv.ParseInt(c.Param("id"), 10, 32)
 	visibilityForm := ArticleVisibilityForm{}
 
 	err := c.BindJSON(&visibilityForm)
-	if err != nil {
+	if iderr != nil || err != nil {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
+	uid := uint16(id)
 
-	articleService := models.Article{
-		ID: uint16(id),
-	}
-
-	exists, err := articleService.Exists()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)
-		return
-	}
-	if !exists {
-		appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
-		return
-	}
+	articleService := models.Article{ID: &uid}
 
 	publishDate, err := articleService.Visibility(*visibilityForm.Publish)
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_EDIT, nil)
+		if err == gorm.ErrRecordNotFound {
+			appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		} else {
+			appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_EDIT, nil)
+		}
 		return
 	}
 
-	appG.Response(http.StatusOK, exception.SUCCESS, publishDate)
+	appG.Response(http.StatusOK, exception.SUCCESS, publishDate.Format(http.TimeFormat))
 }
 
 func AddArticle(c *gin.Context) {
@@ -111,21 +121,21 @@ func AddArticle(c *gin.Context) {
 
 	author := c.GetString("user")
 	articleService := models.Article{
-		Author: author,
+		Author: &author,
 	}
-	err := articleService.Add()
+	err := articleService.Create()
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
 		return
 	}
 
-	article, err := articleService.Get()
+	article, err := articleService.Get([]string{})
 
 	appG.Response(http.StatusOK, exception.SUCCESS, article)
 }
 
 type EditArticleForm struct {
-	ID            int    `json:"id" binding:"required"`
+	ID            uint16 `json:"id" binding:"required"`
 	Title         string `json:"title"`
 	Description   string `json:"description"`
 	Content       string `json:"content"`
@@ -142,26 +152,20 @@ func EditArticle(c *gin.Context) {
 	}
 
 	articleService := models.Article{
-		ID:            uint16(form.ID),
-		Title:         form.Title,
-		Description:   form.Description,
-		Content:       form.Content,
-		CoverImageUrl: form.CoverImageUrl,
+		ID:            &form.ID,
+		Title:         &form.Title,
+		Description:   &form.Description,
+		CoverImageUrl: &form.CoverImageUrl,
+		Content:       &form.Content,
 	}
 
-	exists, err := articleService.Exists()
+	err := articleService.Edit()
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)
-		return
-	}
-	if !exists {
-		appG.Response(http.StatusOK, exception.ERROR_ARTICLE_NOT_EXIST, nil)
-		return
-	}
-
-	err = articleService.Edit()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_EDIT, nil)
+		if err == gorm.ErrRecordNotFound {
+			appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		} else {
+			appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_EDIT, nil)
+		}
 		return
 	}
 
@@ -172,23 +176,45 @@ func DeleteArticle(c *gin.Context) {
 	appG := app.Gin{C: c}
 
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 32)
+	uid := uint16(id)
+	articleService := models.Article{ID: &uid}
 
-	articleService := models.Article{ID: uint16(id)}
-	exists, err := articleService.Exists()
+	err := articleService.Delete()
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CHECK_EXIST, nil)
-		return
-	}
-	if !exists {
-		appG.Response(http.StatusOK, exception.ERROR_ARTICLE_NOT_EXIST, nil)
-		return
-	}
-
-	err = articleService.Delete()
-	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_DELETE, nil)
+		if err == gorm.ErrRecordNotFound {
+			appG.Response(http.StatusBadRequest, exception.ERROR_ARTICLE_NOT_EXIST, nil)
+		} else {
+			appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_DELETE, nil)
+		}
 		return
 	}
 
 	appG.Response(http.StatusOK, exception.SUCCESS, nil)
+}
+
+func StoreImage(c *gin.Context) {
+	appG := app.Gin{C: c}
+	fmt.Println(c.ContentType())
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	fmt.Println(header.Size)
+	if header.Size >= 1000000 {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	buff := make([]byte, 512)
+	if _, err = file.Read(buff); err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+		return
+	}
+	filetype := http.DetectContentType(buff)
+	if !strings.HasPrefix(filetype, "image") {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	c.SaveUploadedFile(header, "/home/felix/coding/web/stratosphaere/images/"+header.Filename)
+	appG.Response(http.StatusOK, exception.SUCCESS, "https://stratosphaere.codelix.de/images/"+header.Filename)
 }

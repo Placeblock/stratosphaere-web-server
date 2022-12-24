@@ -7,3 +7,8 @@ func CompareHash(hashed string, plain []byte) bool {
 	err := bcrypt.CompareHashAndPassword(byteHash, plain)
 	return err == nil
 }
+
+func GenerateHash(password []byte) []byte {
+	hash, _ := bcrypt.GenerateFromPassword(password, 12)
+	return hash
+}
