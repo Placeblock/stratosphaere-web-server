@@ -42,7 +42,7 @@ func (a Article) GetIDChunk(chunkParameters *GetArticlesParams) ([]*uint16, erro
 		//pub & (state=true) | unpub & (state=false)
 		Where("(articles.published AND ?) OR (NOT articles.published AND ?)",
 			chunkParameters.Published, chunkParameters.Unpublished).
-		Order("articles.published asc").Order("articles.publish_date desc").Order("articles.updated_at desc").
+		Order("articles.published desc").Order("articles.publish_date desc").Order("articles.updated_at desc").
 		Offset(*chunkParameters.Offset).Limit(*chunkParameters.Limit).
 		Joins("JOIN users ON users.username = articles.author").
 		Find(&articleids).Error
