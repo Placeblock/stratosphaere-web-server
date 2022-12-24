@@ -1,11 +1,13 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -189,4 +191,31 @@ func DeleteArticle(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, exception.SUCCESS, nil)
+}
+
+func StoreImage(c *gin.Context) {
+	appG := app.Gin{C: c}
+	fmt.Println(c.ContentType())
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	fmt.Println(header.Size)
+	if header.Size >= 1000000 {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	buff := make([]byte, 512)
+	if _, err = file.Read(buff); err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+		return
+	}
+	filetype := http.DetectContentType(buff)
+	if !strings.HasPrefix(filetype, "image") {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	c.SaveUploadedFile(header, "/home/felix/coding/web/stratosphaere/images/"+header.Filename)
+	appG.Response(http.StatusOK, exception.SUCCESS, "https://stratosphaere.codelix.de/images/"+header.Filename)
 }

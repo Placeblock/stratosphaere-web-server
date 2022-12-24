@@ -16,6 +16,7 @@ func init() {
 	setting.Setup()
 	models.Setup()
 	util.Setup()
+	fmt.Println(string(util.GenerateHash([]byte("klaus"))))
 }
 
 func main() {
