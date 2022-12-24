@@ -60,7 +60,7 @@ func GetIDChunk(c *gin.Context) {
 	}
 
 	articleService := models.Article{}
-
+  
 	_, loggedIn := c.Get("user")
 	if !loggedIn {
 		*getArticlesParams.Unpublished = false
