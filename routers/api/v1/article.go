@@ -1,6 +1,15 @@
 package v1
 
 import (
+	"bytes"
+	"fmt"
+	"image"
+	"image/jpeg"
+	"io/ioutil"
+	"os"
+
+	"github.com/nfnt/resize"
+
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
@@ -194,25 +203,45 @@ func DeleteArticle(c *gin.Context) {
 
 func StoreImage(c *gin.Context) {
 	appG := app.Gin{C: c}
-	file, header, err := c.Request.FormFile("file")
+	fileHeader, err := c.FormFile("file")
 	if err != nil {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	if header.Size >= 1000000 {
+	file, err := fileHeader.Open()
+	if err != nil {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	buff := make([]byte, 512)
-	if _, err = file.Read(buff); err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	filetype := http.DetectContentType(buff)
+	if fileHeader.Size >= 1000000 {
+		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		return
+	}
+	filetype := http.DetectContentType(data)
 	if !strings.HasPrefix(filetype, "image") {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	c.SaveUploadedFile(header, "/home/felix/coding/web/stratosphaere/images/"+header.Filename)
-	appG.Response(http.StatusOK, exception.SUCCESS, "https://stratosphaere.codelix.de/images/"+header.Filename)
+	img, _, err := image.Decode(bytes.NewBuffer(data))
+	if err != nil {
+		fmt.Println(err)
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+		return
+	}
+	resized := resize.Thumbnail(1024, 1024, img, resize.Lanczos2)
+	fileName := fileHeader.Filename[:strings.LastIndex(fileHeader.Filename, ".")]
+
+	out, err := os.Create("/home/felix/coding/web/stratosphaere/images/" + fileName + ".jpeg")
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+		return
+	}
+	defer out.Close()
+	jpeg.Encode(out, resized, nil)
+	appG.Response(http.StatusOK, exception.SUCCESS, "https://stratosphaere.codelix.de/images/"+fileName+".jpeg")
 }

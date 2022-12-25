@@ -10,6 +10,10 @@ import (
 	"stratosphaere-server/routers"
 
 	"github.com/gin-gonic/gin"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 func init() {
