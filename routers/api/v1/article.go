@@ -218,7 +218,7 @@ func StoreImage(c *gin.Context) {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
-	if fileHeader.Size >= 1000000 {
+	if fileHeader.Size >= 10000000 {
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
