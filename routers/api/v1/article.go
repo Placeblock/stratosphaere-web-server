@@ -7,6 +7,7 @@ import (
 	"image/jpeg"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/nfnt/resize"
 
@@ -14,6 +15,7 @@ import (
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
+	"stratosphaere-server/pkg/setting"
 	"strconv"
 	"strings"
 
@@ -235,13 +237,30 @@ func StoreImage(c *gin.Context) {
 	}
 	resized := resize.Thumbnail(1024, 1024, img, resize.Lanczos2)
 	fileName := fileHeader.Filename[:strings.LastIndex(fileHeader.Filename, ".")]
+	fileName = fileName + strconv.FormatInt(time.Now().UnixNano(), 10)
 
-	out, err := os.Create("/home/felix/coding/web/stratosphaere/images/" + fileName + ".jpeg")
+	out, err := os.Create(setting.AppSetting.ImageFolder + fileName + ".jpeg")
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
 		return
 	}
 	defer out.Close()
 	jpeg.Encode(out, resized, nil)
-	appG.Response(http.StatusOK, exception.SUCCESS, "https://stratosphaere.codelix.de/images/"+fileName+".jpeg")
+	appG.Response(http.StatusOK, exception.SUCCESS, setting.AppSetting.ImageUrl+fileName+".jpeg")
+}
+
+func DeleteImage(c *gin.Context) {
+	appG := app.Gin{C: c}
+
+	fileName := c.Param("file")
+
+	err := os.Remove(setting.AppSetting.ImageFolder + fileName)
+
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_DELETE, nil)
+		return
+	}
+
+	appG.Response(http.StatusOK, exception.SUCCESS, nil)
+
 }

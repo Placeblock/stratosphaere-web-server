@@ -48,6 +48,7 @@ func InitRouter() *gin.Engine {
 	apiv1_secure_blog.PUT("/articles/:id", v1.EditArticle)
 	apiv1_secure_blog.PUT("/articles/:id/publish", v1.ArticleVisibility)
 	apiv1_secure_blog.POST("/image", v1.StoreImage)
+	apiv1_secure_blog.DELETE("/image/:file", v1.DeleteImage)
 
 	//SECURE-LIVE
 	/*apiv1_secure.POST("/live")*/
