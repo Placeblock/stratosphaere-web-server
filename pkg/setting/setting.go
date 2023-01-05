@@ -7,7 +7,9 @@ import (
 )
 
 type App struct {
-	JwtSecret string
+	JwtSecret   string
+	ImageFolder string
+	ImageUrl    string
 }
 
 var AppSetting = &App{}
