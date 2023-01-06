@@ -31,6 +31,7 @@ func Setup() {
 
 	db.AutoMigrate(&Article{})
 	db.AutoMigrate(&Auth{})
+	db.AutoMigrate(&LiveData{})
 }
 
 func CloseDB() {

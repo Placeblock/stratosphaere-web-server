@@ -16,9 +16,18 @@ func GetLiveData(c *gin.Context) {
 	var getLiveDataParams models.GetLiveDataParams
 
 	if err := c.BindQuery(&getLiveDataParams); err != nil {
+		fmt.Println(err)
 		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
 		return
 	}
 
-	fmt.Println(getLiveDataParams)
+	liveData, err := models.GetLiveData(*getLiveDataParams.Since)
+
+	if err != nil {
+		appG.Response(http.StatusBadRequest, exception.ERROR_LIVE_DATA_GET, nil)
+		return
+	}
+
+	fmt.Println(liveData)
+	appG.Response(http.StatusOK, exception.SUCCESS, liveData)
 }

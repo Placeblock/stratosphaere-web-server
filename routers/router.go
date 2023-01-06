@@ -24,6 +24,8 @@ func InitRouter() *gin.Engine {
 	apiv1_unsecure := apiv1.Group("")
 	apiv1_unsecure.POST("/auth", v1.GetAuth)
 
+	apiv1_unsecure.GET("/live", v1.GetLiveData)
+
 	//UNSECURE-EMAIL
 	/*apiv1_unsecure.POST("/email")
 	apiv1_unsecure.DELETE("/email")*/

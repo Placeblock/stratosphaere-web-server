@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type GetArticlesParams struct {
 	Offset      *int  `form:"offset" json:"offset"  binding:"required"`
@@ -10,5 +12,5 @@ type GetArticlesParams struct {
 }
 
 type GetLiveDataParams struct {
-	Since *time.Time `form:"since" json:"since" time_format:"2006-01-02T15:04:05Z07:00"`
+	Since *time.Time `form:"since" json:"since" binding:"required" time_format:"2006-01-02T15:04:05Z07:00"`
 }
