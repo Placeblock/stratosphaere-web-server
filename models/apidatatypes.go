@@ -12,7 +12,7 @@ type GetArticlesParams struct {
 }
 
 type GetLiveDataParams struct {
-	Since *time.Time `form:"since" json:"since" binding:"required" time_format:"2006-01-02T15:04:05Z07:00"`
+	Since *time.Time `form:"since" json:"since" binding:"required" time_format:"2006-01-02T15:04:05.000Z07:00"`
 }
 
 type SetLiveData struct {

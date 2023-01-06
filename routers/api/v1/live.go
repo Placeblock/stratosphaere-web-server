@@ -23,6 +23,8 @@ func GetLiveData(c *gin.Context) {
 		return
 	}
 
+	fmt.Println(*getLiveDataParams.Since)
+
 	liveData, err := models.GetLiveData(*getLiveDataParams.Since)
 
 	if err != nil {
@@ -30,7 +32,6 @@ func GetLiveData(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(liveData)
 	appG.Response(http.StatusOK, exception.SUCCESS, liveData)
 }
 

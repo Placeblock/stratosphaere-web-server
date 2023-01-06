@@ -24,7 +24,7 @@ func (d LiveData) MarshalJSON() ([]byte, error) {
 		CreatedAt string `json:"time"`
 	}{
 		Alias:     (*Alias)(&d),
-		CreatedAt: (*d.CreatedAt).UTC().Format(time.RFC3339),
+		CreatedAt: (*d.CreatedAt).UTC().Format("2006-01-02T15:04:05.000Z"),
 	})
 }
 
@@ -38,7 +38,7 @@ func (d *LiveData) Create() error {
 func GetLiveData(since time.Time) ([]LiveData, error) {
 	var liveData []LiveData
 	err := db.Model(&LiveData{}).
-		Where("created_at > ?", since.UTC().Format("2006-01-02 15:04:05")).
+		Where("created_at > ?", since.UTC().Format("2006-01-02 15:04:05.000")).
 		Order("created_at asc").
 		Find(&liveData).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
