@@ -1,11 +1,13 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"stratosphaere-server/models"
 	"stratosphaere-server/pkg/app"
 	"stratosphaere-server/pkg/exception"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,4 +32,14 @@ func GetLiveData(c *gin.Context) {
 
 	fmt.Println(liveData)
 	appG.Response(http.StatusOK, exception.SUCCESS, liveData)
+}
+
+func SetLiveData(c *gin.Context) {
+	jsonData, _ := c.GetRawData()
+	var liveData models.SetLiveData
+	json.Unmarshal(jsonData, &liveData)
+	nowTime := time.Now()
+	liveData.UplinkMessage.DecodedPayload.CreatedAt = &nowTime
+	liveData.UplinkMessage.DecodedPayload.Create()
+	c.Status(http.StatusOK)
 }
