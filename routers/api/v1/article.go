@@ -212,27 +212,27 @@ func StoreImage(c *gin.Context) {
 	}
 	file, err := fileHeader.Open()
 	if err != nil {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_IMAGE_OPEN, nil)
 		return
 	}
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_IMAGE_READ, nil)
 		return
 	}
 	if fileHeader.Size >= 10000000 {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_IMAGE_TOO_LARGE, nil)
 		return
 	}
 	filetype := http.DetectContentType(data)
 	if !strings.HasPrefix(filetype, "image") {
-		appG.Response(http.StatusBadRequest, exception.INVALID_PARAMS, nil)
+		appG.Response(http.StatusBadRequest, exception.ERROR_IMAGE_INVALID_TYPE, nil)
 		return
 	}
 	img, _, err := image.Decode(bytes.NewBuffer(data))
 	if err != nil {
 		fmt.Println(err)
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+		appG.Response(http.StatusInternalServerError, exception.ERROR_IMAGE_DECODE, nil)
 		return
 	}
 	resized := resize.Thumbnail(1024, 1024, img, resize.Lanczos2)
@@ -241,7 +241,7 @@ func StoreImage(c *gin.Context) {
 
 	out, err := os.Create(setting.AppSetting.ImageFolder + fileName + ".jpeg")
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_CREATE, nil)
+		appG.Response(http.StatusInternalServerError, exception.ERROR_IMAGE_SAVE, nil)
 		return
 	}
 	defer out.Close()
@@ -257,7 +257,7 @@ func DeleteImage(c *gin.Context) {
 	err := os.Remove(setting.AppSetting.ImageFolder + fileName)
 
 	if err != nil {
-		appG.Response(http.StatusInternalServerError, exception.ERROR_ARTICLE_FAIL_DELETE, nil)
+		appG.Response(http.StatusInternalServerError, exception.ERROR_IMAGE_DELETE, nil)
 		return
 	}
 

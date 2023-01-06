@@ -21,6 +21,14 @@ var Messages = map[int]string{
 	ERROR_EMAIL_NOT_EXIST:          "This email doesn't exist",
 	ERROR_AUTH_TOKEN_MISSING:       "No token provided in Authorization Header",
 	ERROR_ARTICLE_DELETE_NOT_OWNER: "This is not your article",
+	ERROR_IMAGE_OPEN:               "Error occured while trying to open file",
+	ERROR_IMAGE_READ:               "Error occurde while trying to read file",
+	ERROR_IMAGE_TOO_LARGE:          "The provided file is too large",
+	ERROR_IMAGE_INVALID_TYPE:       "Only Images are supported",
+	ERROR_IMAGE_DECODE:             "Error occured while trying to decode file",
+	ERROR_IMAGE_SAVE:               "Error occured while trying to save file",
+	ERROR_IMAGE_DELETE:             "Error occured while trying to delete image",
+	ERROR_LIVE_DATA_GET:            "Error occured while trying to get live data",
 }
 
 func GetMsg(code int) string {

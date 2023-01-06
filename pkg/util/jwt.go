@@ -14,17 +14,24 @@ type AuthClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(user_id uint16, username string) (string, error) {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(24 * 30 * time.Hour)
+func GenerateToken(user_id uint16, username string, expires bool) (string, error) {
+	expireTime := time.Now().Add(24 * 30 * time.Hour)
+	var registeredClaims jwt.RegisteredClaims
+	if expires {
+		registeredClaims = jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expireTime),
+			Issuer:    "solis",
+		}
+	} else {
+		registeredClaims = jwt.RegisteredClaims{
+			Issuer: "solis",
+		}
+	}
 
 	authClaims := &AuthClaims{
 		int(user_id),
 		username,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expireTime),
-			Issuer:    "solis",
-		},
+		registeredClaims,
 	}
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, authClaims)
