@@ -48,6 +48,7 @@ func GetAuth(c *gin.Context) {
 		appG.Response(http.StatusInternalServerError, exception.ERROR_AUTH_TOKEN_FAIL, nil)
 		return
 	}
-
-	appG.Response(http.StatusOK, exception.SUCCESS, token)
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("authToken", token, 60*60*24*30, "/", "", true, false)
+	appG.Response(http.StatusOK, exception.SUCCESS, nil)
 }
